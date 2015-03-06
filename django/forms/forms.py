@@ -578,7 +578,7 @@ class BoundField(object):
             name = self.html_name
         else:
             name = self.html_initial_name
-        return force_text(widget.render(name, self.value(), attrs=attrs))
+        return force_text(widget.render(name, self._get_value(widget, only_initial), attrs=attrs))
 
     def as_text(self, attrs=None, **kwargs):
         """
@@ -594,20 +594,28 @@ class BoundField(object):
         """
         Returns a string of HTML for representing this as an <input type="hidden">.
         """
-        return self.as_widget(self.field.hidden_widget(), attrs, **kwargs)
+        widget = self.field.hidden_widget()
+        widget._format_value = self.field.widget._format_value
+        return self.as_widget(widget, attrs, **kwargs)
 
     @property
     def data(self):
         """
         Returns the data for this BoundField, or None if it wasn't given.
         """
-        return self.field.widget.value_from_datadict(self.form.data, self.form.files, self.html_name)
+        return self._get_data(self.field.widget)
+
+    def _get_data(self, widget):
+        return widget.value_from_datadict(self.form.data, self.form.files, self.html_name)
 
     def value(self):
         """
         Returns the value for this BoundField, using the initial value if
         the form is not bound or the data otherwise.
         """
+        return self._get_value(self, self.field.widget)
+
+    def _get_value(self, widget, only_initial=False):
         if not self.form.is_bound:
             data = self.form.initial.get(self.name, self.field.initial)
             if callable(data):
@@ -618,12 +626,14 @@ class BoundField(object):
                     # If this is an auto-generated default date, nix the
                     # microseconds for standardized handling. See #22502.
                     if (isinstance(data, (datetime.datetime, datetime.time)) and
-                            not getattr(self.field.widget, 'supports_microseconds', True)):
+                            not getattr(widget, 'supports_microseconds', True)):
                         data = data.replace(microsecond=0)
                     self._initial_value = data
+        elif only_initial:
+            data = self.form.data.get(hidden_name, '')
         else:
             data = self.field.bound_data(
-                self.data, self.form.initial.get(self.name, self.field.initial)
+                self._get_data(widget), self.form.initial.get(self.name, self.field.initial)
             )
         return self.field.prepare_value(data)
 
