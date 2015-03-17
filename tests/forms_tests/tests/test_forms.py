@@ -1234,6 +1234,19 @@ class FormsTestCase(TestCase):
         self.assertEqual(bound['password'].value(), 'foo')
         self.assertEqual(unbound['password'].value(), None)
 
+    def test_boundfield_initial_data(self):
+        import mock
+        with mock.patch('django.conf.settings.DATE_INPUT_FORMATS', ['%d.%m.%Y']):
+            import datetime
+            today = lambda : datetime.date(2015, 3, 17)
+            class DateForm(Form):
+                date = DateField(initial=today, show_hidden_initial=True)
+
+            unbound = DateForm()
+            self.assertEqual(unbound['date'].as_widget(), '<input id="id_date" name="date" type="text" value="17.03.2015" />')
+            self.assertEqual(unbound['date'].as_hidden(only_initial=True), '<input id="initial-id_date" name="initial-date" type="hidden" value="17.03.2015" />')
+            self.assertEqual(str(unbound['date']), '<input id="id_date" name="date" type="text" value="17.03.2015" /><input id="initial-id_date" name="initial-date" type="hidden" value="17.03.2015" />')
+
     def test_help_text(self):
         # You can specify descriptive text for a field by using the 'help_text' argument)
         class UserRegistration(Form):
