@@ -1465,6 +1465,143 @@ class FormsTestCase(TestCase):
         self.assertEqual(unbound['auto_time_only'].value(), now_no_ms.time())
         self.assertEqual(unbound['supports_microseconds'].value(), now)
 
+###############################################
+
+    def test_boundfield__unbound_form__date(self):
+        import mock
+        with mock.patch('django.conf.settings.DATE_INPUT_FORMATS', ['%d.%m.%Y']):
+            import datetime
+            today = lambda : datetime.date(2015, 3, 17)
+            class DateForm(Form):
+                date = DateField(initial=today, show_hidden_initial=True)
+
+            unbound = DateForm()
+            self.assertEqual(unbound['date'].as_widget(), '<input id="id_date" name="date" type="text" value="17.03.2015" />')
+            self.assertEqual(unbound['date'].as_hidden(only_initial=True), '<input id="initial-id_date" name="initial-date" type="hidden" value="17.03.2015" />')
+            self.assertEqual(str(unbound['date']), '<input id="id_date" name="date" type="text" value="17.03.2015" /><input id="initial-id_date" name="initial-date" type="hidden" value="17.03.2015" />')
+
+    def test_boundfield__changed_bound_form__date(self):
+        import mock
+        with mock.patch('django.conf.settings.DATE_INPUT_FORMATS', ['%d.%m.%Y']):
+            import datetime
+            today = lambda : datetime.date(2015, 3, 17)
+            class DateForm(Form):
+                date = DateField(initial=today, show_hidden_initial=True)
+
+            bound = DateForm({'date': '20.03.2015', 'initial-date': '2015-03-17'})
+            #bound = DateForm({'date': '20.03.2015', 'initial-date': '17.03.2015'}) # uncomment to see changes with correctly formatted hidden-initial
+            self.assertEqual(bound['date'].as_widget(), '<input id="id_date" name="date" type="text" value="20.03.2015" />')
+            self.assertEqual(bound['date'].as_hidden(only_initial=True), '<input id="initial-id_date" name="initial-date" type="hidden" value="17.03.2015" />')
+            self.assertEqual(str(bound['date']), '<input id="id_date" name="date" type="text" value="20.03.2015" /><input id="initial-id_date" name="initial-date" type="hidden" value="17.03.2015" />')
+
+    def test_boundfield__changed_bound_form__bogus_initial__date(self):
+        import mock
+        with mock.patch('django.conf.settings.DATE_INPUT_FORMATS', ['%d.%m.%Y']):
+            import datetime
+            today = lambda : datetime.date(2015, 3, 17)
+            class DateForm(Form):
+                date = DateField(initial=today, show_hidden_initial=True)
+
+            bound = DateForm({'date': '20.03.2015', 'initial-date': '2015-03-10'})
+            #bound = DateForm({'date': '20.03.2015', 'initial-date': '10.03.2015'}) # uncomment to see changes with correctly formatted hidden-initial
+            self.assertEqual(bound['date'].as_widget(), '<input id="id_date" name="date" type="text" value="20.03.2015" />')
+            self.assertEqual(bound['date'].as_hidden(only_initial=True), '<input id="initial-id_date" name="initial-date" type="hidden" value="10.03.2015" />')
+            self.assertEqual(str(bound['date']), '<input id="id_date" name="date" type="text" value="20.03.2015" /><input id="initial-id_date" name="initial-date" type="hidden" value="17.03.2015" />')
+
+    def test_boundfield__changed_bound_form__missing_initial__date(self):
+        import mock
+        with mock.patch('django.conf.settings.DATE_INPUT_FORMATS', ['%d.%m.%Y']):
+            import datetime
+            today = lambda : datetime.date(2015, 3, 17)
+            class DateForm(Form):
+                date = DateField(initial=today, show_hidden_initial=True)
+
+            bound = DateForm({'date': '20.03.2015', 'initial-date': '2015-03-17'})
+            #bound = DateForm({'date': '20.03.2015', 'initial-date': '17.03.2015'}) # uncomment to see changes with correctly formatted hidden-initial
+            self.assertEqual(bound['date'].as_widget(), '<input id="id_date" name="date" type="text" value="20.03.2015" />')
+            self.assertEqual(bound['date'].as_hidden(only_initial=True), '<input id="initial-id_date" name="initial-date" type="hidden" value="17.03.2015" />')
+            self.assertEqual(str(bound['date']), '<input id="id_date" name="date" type="text" value="20.03.2015" /><input id="initial-id_date" name="initial-date" type="hidden" value="17.03.2015" />')
+
+    def test_boundfield__unchanged_bound_form__date(self):
+        import mock
+        with mock.patch('django.conf.settings.DATE_INPUT_FORMATS', ['%d.%m.%Y']):
+            import datetime
+            today = lambda : datetime.date(2015, 3, 17)
+            class DateForm(Form):
+                date = DateField(initial=today, show_hidden_initial=True)
+
+            bound = DateForm({'date': '17.03.2015', 'initial-date': '2015-03-17'})
+            #bound = DateForm({'date': '17.03.2015', 'initial-date': '17.03.2015'}) # uncomment to see changes with correctly formatted hidden-initial
+            self.assertEqual(bound['date'].as_widget(), '<input id="id_date" name="date" type="text" value="17.03.2015" />')
+            self.assertEqual(bound['date'].as_hidden(only_initial=True), '<input id="initial-id_date" name="initial-date" type="hidden" value="17.03.2015" />')
+            self.assertEqual(str(bound['date']), '<input id="id_date" name="date" type="text" value="17.03.2015" /><input id="initial-id_date" name="initial-date" type="hidden" value="17.03.2015" />')
+
+    def test_boundfield__unchanged_bound_form__missing_initial__date(self):
+        import mock
+        with mock.patch('django.conf.settings.DATE_INPUT_FORMATS', ['%d.%m.%Y']):
+            import datetime
+            today = lambda : datetime.date(2015, 3, 17)
+            class DateForm(Form):
+                date = DateField(initial=today, show_hidden_initial=True)
+
+            bound = DateForm({'date': '17.03.2015'})
+            #bound = DateForm({'date': '17.03.2015'})
+            self.assertEqual(bound['date'].as_widget(), '<input id="id_date" name="date" type="text" value="17.03.2015" />')
+            self.assertEqual(bound['date'].as_hidden(only_initial=True), '<input id="initial-id_date" name="initial-date" type="hidden" value="17.03.2015" />')
+            self.assertEqual(str(bound['date']), '<input id="id_date" name="date" type="text" value="17.03.2015" /><input id="initial-id_date" name="initial-date" type="hidden" value="17.03.2015" />')
+
+#####################################################################################
+
+    def test_boundfield__unbound_form__integer(self):
+        class MyForm(Form):
+            foo = IntegerField(initial=1, show_hidden_initial=True)
+        unbound = MyForm()
+        self.assertEqual(unbound['foo'].as_widget(), '<input id="id_foo" name="foo" type="number" value="1" />')
+        self.assertEqual(unbound['foo'].as_hidden(only_initial=True), '<input id="initial-id_foo" name="initial-foo" type="hidden" value="1" />')
+        self.assertEqual(str(unbound['foo']), '<input id="id_foo" name="foo" type="number" value="1" /><input id="initial-id_foo" name="initial-foo" type="hidden" value="1" />')
+
+    def test_boundfield__changed_bound_form__integer(self):
+        class MyForm(Form):
+            foo = IntegerField(initial=1, show_hidden_initial=True)
+        bound = MyForm({'foo': 5, 'initial-foo': 1})
+        self.assertEqual(bound['foo'].as_widget(), '<input id="id_foo" name="foo" type="number" value="5" />')
+        self.assertEqual(bound['foo'].as_hidden(only_initial=True), '<input id="initial-id_foo" name="initial-foo" type="hidden" value="1" />')
+        self.assertEqual(str(bound['foo']), '<input id="id_foo" name="foo" type="number" value="5" /><input id="initial-id_foo" name="initial-foo" type="hidden" value="1" />')
+
+    def test_boundfield__changed_bound_form__bogus_initial__integer(self):
+        class MyForm(Form):
+            foo = IntegerField(initial=1, show_hidden_initial=True)
+        bound = MyForm({'foo': 5, 'initial-foo': 2})
+        self.assertEqual(bound['foo'].as_widget(), '<input id="id_foo" name="foo" type="number" value="5" />')
+        self.assertEqual(bound['foo'].as_hidden(only_initial=True), '<input id="initial-id_foo" name="initial-foo" type="hidden" value="1" />')
+        self.assertEqual(str(bound['foo']), '<input id="id_foo" name="foo" type="number" value="5" /><input id="initial-id_foo" name="initial-foo" type="hidden" value="1" />')
+
+    def test_boundfield__changed_bound_form__missing_initial__integer(self):
+        class MyForm(Form):
+            foo = IntegerField(initial=1, show_hidden_initial=True)
+        bound = MyForm({'foo': 5})
+        self.assertEqual(bound['foo'].as_widget(), '<input id="id_foo" name="foo" type="number" value="5" />')
+        self.assertEqual(bound['foo'].as_hidden(only_initial=True), '<input id="initial-id_foo" name="initial-foo" type="hidden" value="1" />')
+        self.assertEqual(str(bound['foo']), '<input id="id_foo" name="foo" type="number" value="5" /><input id="initial-id_foo" name="initial-foo" type="hidden" value="1" />')
+
+    def test_boundfield__unchanged_bound_form__integer(self):
+        class MyForm(Form):
+            foo = IntegerField(initial=1, show_hidden_initial=True)
+        bound = MyForm({'foo': 1, 'initial-foo': 1})
+        self.assertEqual(bound['foo'].as_widget(), '<input id="id_foo" name="foo" type="number" value="1" />')
+        self.assertEqual(bound['foo'].as_hidden(only_initial=True), '<input id="initial-id_foo" name="initial-foo" type="hidden" value="1" />')
+        self.assertEqual(str(bound['foo']), '<input id="id_foo" name="foo" type="number" value="1" /><input id="initial-id_foo" name="initial-foo" type="hidden" value="1" />')
+
+    def test_boundfield__unchanged_bound_form__missing_initial__integer(self):
+        class MyForm(Form):
+            foo = IntegerField(initial=1, show_hidden_initial=True)
+        bound = MyForm({'foo': 1})
+        self.assertEqual(bound['foo'].as_widget(), '<input id="id_foo" name="foo" type="number" value="1" />')
+        self.assertEqual(bound['foo'].as_hidden(only_initial=True), '<input id="initial-id_foo" name="initial-foo" type="hidden" value="1" />')
+        self.assertEqual(str(bound['foo']), '<input id="id_foo" name="foo" type="number" value="1" /><input id="initial-id_foo" name="initial-foo" type="hidden" value="1" />')
+
+#######################################################################################
+
     def test_help_text(self):
         # You can specify descriptive text for a field by using the 'help_text' argument)
         class UserRegistration(Form):
